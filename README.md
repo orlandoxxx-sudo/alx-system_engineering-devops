@@ -1,1 +1,1 @@
-Shell Permissions
+Web stack debugging
