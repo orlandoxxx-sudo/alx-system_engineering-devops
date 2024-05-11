@@ -1,5 +1,12 @@
 #!/usr/bin/env bash
-# run apache on designated container
+# Start Apache on the designated container and configure it to return a page containing "Hello Holberton".
 
-echo "ServerName localhost" >> /etc/apache2.conf
-service apache2 start
+# Install Apache (assuming it's not already installed)
+apt-get update
+apt-get install -y apache2
+
+# Configure Apache to return "Hello Holberton" at the root URL
+echo "Hello Holberton" > /var/www/html/index.html
+
+# Restart Apache to apply changes
+service apache2 restart
