@@ -1,0 +1,9 @@
+#!/bin/bash
+
+if [ $# -ne 1 ]; then
+    echo "Usage: ./0-iamsomeoneelse <username>"
+    exit 1
+fi
+
+USERNAME=$1
+sudo su -l "$USERNAME" -c 'whoami'
