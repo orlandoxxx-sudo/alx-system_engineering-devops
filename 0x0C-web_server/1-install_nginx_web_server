@@ -1,29 +1,15 @@
 #!/usr/bin/env bash
 # commands to install and configure nginx on webserver
 
-# Update package list
 sudo apt-get update
+sudo apt-get install nginx
 
-# Install nginx
-sudo apt-get install -y nginx
+sudo ufw 'Nginx HTTP'
 
-# Allow Nginx HTTP traffic through the firewall
-sudo ufw allow 'Nginx HTTP'
-
-# Write "Hello World!" to the default index page
 echo "Hello World!" | sudo tee /var/www/html/index.html
 
-# Verify the content of the index.html
-echo "Content of /var/www/html/index.html:"
-cat /var/www/html/index.html
+#testing nginx configurations
 
-# Test Nginx configuration
 sudo nginx -t
 
-# Reload Nginx to apply changes
 sudo service nginx reload
-
-# Check if Nginx is running and the correct content is served
-echo "Testing Nginx server..."
-curl -I http://localhost/
-curl http://localhost/
