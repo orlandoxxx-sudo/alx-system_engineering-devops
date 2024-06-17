@@ -4,10 +4,15 @@
 apt-get update
 apt-get -y install nginx
 
+sudo ufw allow 'Nginx HTTP'
+mkdir -p /var/www/html/
+sudo chmod -R 755 /var/www
 echo 'Hello World!' | sudo tee /var/www/html/index.html
 
-string_for_replacement="server_name _;\n\trewrite ^\/redirect_me https:\/\/github.com\/orlandoxxx-sudo permanent"
+# Correctly format and escape the replacement string for sed
+string_for_replacement="server_name _;\n\tlocation /redirect_me {\n\t\trewrite ^ https:\/\/github.com\/orlandoxxx-sudo permanent;\n\t}"
 
-sudo sed -i "s/server_name _;/$string_for_replacement" /etc/nginx/sites-enabled/default
+# Use sed to replace the server_name line with the new configuration
+sudo sed -i "s/server_name _;/$string_for_replacement/" /etc/nginx/sites-available/default
 
-sudo service nginx restart
+sudo nginx -t && sudo service nginx restart
