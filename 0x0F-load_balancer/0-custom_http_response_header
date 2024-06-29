@@ -1,29 +1,88 @@
 #!/usr/bin/env bash
-# 404 Not Found Page
+# 0-custom_http_response_header - Configure a brand new Ubuntu machine with Nginx and custom HTTP response headers.
 
-apt-get update
-apt-get install -y nginx
+# Uncomment to see the script run in action
+# set -x
 
-touch /var/www/html/index.html /var/www/html/404.html
-echo "Hello World!" > /var/www/html/index.html
-echo "Ceci n'est pas une page" > /var/www/html/404.html
+echo -e "Updating and installing necessary packages...\n"
 
-printf %s "server {
-    listen 80;
+function install() {
+    command -v "$1" &> /dev/null
+    #shellcheck disable=SC2181
+    if [ $? -ne 0 ]; then
+        echo -e "	Installing: $1\n"
+        sudo apt-get update -y -qq && \
+            sudo apt-get install -y "$1" -qq
+        echo -e "\n"
+    else
+        echo -e "	${1} is already installed.\n"
+    fi
+}
+
+# Install Nginx
+install nginx
+
+echo -e "\nConfiguring Nginx...\n"
+
+# Allow Nginx through the firewall
+sudo ufw allow 'Nginx HTTP'
+
+# Ensure /var/www directory exists with appropriate permissions
+if [ -d "/var/www" ]; then
+    sudo chown -R "$USER":"$USER" /var/www
+    sudo chmod -R 755 /var/www
+else
+    sudo mkdir -p /var/www
+    sudo chown -R "$USER":"$USER" /var/www
+    sudo chmod -R 755 /var/www
+fi
+
+# Create directories for web content and error pages
+for dir in /var/www/{html,error}; do
+    if ! [ -d "$dir" ]; then
+        sudo mkdir -p "$dir"
+    fi
+done
+
+# Create sample index.html and error page
+echo "Hello World!" | sudo tee /var/www/html/index.html > /dev/null
+echo "Ceci n'est pas une page" | sudo tee /var/www/error/error_404.html > /dev/null
+
+# Backup the original Nginx default configuration
+sudo cp /etc/nginx/sites-enabled/default /etc/nginx/sites-enabled/default.backup
+
+# Define the new server configuration with custom HTTP response headers
+server_config="server {
+    listen 80 default_server;
     listen [::]:80 default_server;
-    add_header X-Served-By $HOSTNAME;
-    root   /var/www/html/;
-    index  index.html index.htm;
+    root /var/www/html;
+    index index.html index.htm;
+    server_name _;
 
-    location /redirect_me {
-        return 301 https://www.youtube.com/watch?v=TfgBHC5gvTI;
+    add_header X-Served-By \$hostname;
+
+    location / {
+        try_files \$uri \$uri/ =404;
     }
 
-    error_page 404 /404.html;
-    location /404 {
-        root /var/www/html/;
+    if (\$request_filename ~ redirect_me){
+        rewrite ^ https://th3-gr00t.tk/ permanent;
+    }
+
+    error_page 404 /error/error_404.html;
+    location = /error/error_404.html {
         internal;
     }
-}" > /etc/nginx/sites-available/default
+}"
 
-service nginx restart
+# Apply the new configuration
+echo "$server_config" | sudo tee /etc/nginx/sites-enabled/default > /dev/null
+
+# Start or restart Nginx service
+if [ "$(pgrep -c nginx)" -le 0 ]; then
+    sudo service nginx start
+else
+    sudo service nginx restart
+fi
+
+echo -e "\nConfiguration complete. Nginx is now set up with custom HTTP response headers."
