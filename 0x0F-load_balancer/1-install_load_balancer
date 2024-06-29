@@ -40,7 +40,7 @@ frontend clickviral-tech-frontend
 
 backend clickviral-tech-backend
     balance roundrobin
-    server 151666-web-01 34.207.190.223:80 check
+    server 151666-web-01 54.146.12.5:80 check
     server 151666-web-02 34.239.250.223:80 check
 "
 
